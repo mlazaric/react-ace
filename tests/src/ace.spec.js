@@ -358,12 +358,12 @@ describe("Ace Component", () => {
     it("function arg should be called when after timeout", done => {
       const wrapper = mount(<AceEditor />, mountOptions);
       var flag = false;
-      var func = wrapper.instance().debounce(function() {
+      var func = wrapper.instance().debounce(function () {
         flag = true;
       }, 100);
       func();
       expect(flag).to.be.false;
-      setTimeout(function() {
+      setTimeout(function () {
         expect(flag).to.be.true;
         done();
       }, 150);
@@ -373,19 +373,19 @@ describe("Ace Component", () => {
       const wrapper = mount(<AceEditor />, mountOptions);
 
       var flag = false;
-      var func = wrapper.instance().debounce(function() {
+      var func = wrapper.instance().debounce(function () {
         flag = true;
       }, 100);
       func();
       expect(flag).to.be.false;
-      setTimeout(function() {
+      setTimeout(function () {
         expect(flag).to.be.false;
         func();
       }, 50);
-      setTimeout(function() {
+      setTimeout(function () {
         expect(flag).to.be.false;
       }, 120);
-      setTimeout(function() {
+      setTimeout(function () {
         expect(flag).to.be.true;
         done();
       }, 160);
@@ -396,7 +396,7 @@ describe("Ace Component", () => {
 
       var flag1 = false;
       var flag2 = false;
-      var func = wrapper.instance().debounce(function() {
+      var func = wrapper.instance().debounce(function () {
         if (flag1) {
           flag2 = true;
         }
@@ -406,15 +406,15 @@ describe("Ace Component", () => {
       func();
       expect(flag1).to.be.false;
       expect(flag2).to.be.false;
-      setTimeout(function() {
+      setTimeout(function () {
         expect(flag1).to.be.false;
         expect(flag2).to.be.false;
         func();
-        setTimeout(function() {
+        setTimeout(function () {
           expect(flag1).to.be.true;
           expect(flag2).to.be.false;
           func();
-          setTimeout(function() {
+          setTimeout(function () {
             expect(flag1).to.be.true;
             expect(flag2).to.be.false;
             done();
@@ -456,6 +456,76 @@ describe("Ace Component", () => {
       expect(onChangeCallback.getCall(0).args[1].action).to.eq("insert");
     });
 
+    it("should call the onChange method callback for undoing and redoing text insertion", () => {
+      const onChangeCallback = sinon.spy();
+      const wrapper = mount(
+        <AceEditor onChange={onChangeCallback} />,
+        mountOptions
+      );
+
+      // Check is not previously called
+      expect(onChangeCallback.callCount).to.equal(0);
+
+      // Trigger the change event
+      const expectText = "React Ace Test";
+      wrapper.instance().editor.setValue(expectText, 1);
+
+      // Trigger the undo event
+      wrapper.instance().editor.undo();
+
+      // Trigger the redo event
+      wrapper.instance().editor.redo();
+
+      expect(onChangeCallback.callCount).to.equal(3);
+
+      // Insert text action
+      expect(onChangeCallback.getCall(0).args[0]).to.equal(expectText);
+      expect(onChangeCallback.getCall(0).args[1].action).to.eq("insert");
+
+      // Undo text insertion
+      expect(onChangeCallback.getCall(1).args[0]).to.equal("");
+      expect(onChangeCallback.getCall(1).args[1].action).to.eq("remove");
+
+      // Redo text insertion
+      expect(onChangeCallback.getCall(2).args[0]).to.equal(expectText);
+      expect(onChangeCallback.getCall(2).args[1].action).to.eq("insert");
+    });
+
+    it("should call the onChange method callback for undoing and redoing text removal", () => {
+      const onChangeCallback = sinon.spy();
+      const expectText = "React Ace Test";
+      const wrapper = mount(
+        <AceEditor onChange={onChangeCallback} value={expectText} />,
+        mountOptions
+      );
+
+      // Check is not previously called
+      expect(onChangeCallback.callCount).to.equal(0);
+
+      // Trigger the change event
+      wrapper.instance().editor.setValue("", 1);
+
+      // Trigger the undo event
+      wrapper.instance().editor.undo();
+
+      // Trigger the redo event
+      wrapper.instance().editor.redo();
+
+      expect(onChangeCallback.callCount).to.equal(3);
+
+      // Remove text action
+      expect(onChangeCallback.getCall(0).args[0]).to.equal("");
+      expect(onChangeCallback.getCall(0).args[1].action).to.eq("remove");
+
+      // Undo text insertion
+      expect(onChangeCallback.getCall(1).args[0]).to.equal(expectText);
+      expect(onChangeCallback.getCall(1).args[1].action).to.eq("insert");
+
+      // Redo text insertion
+      expect(onChangeCallback.getCall(2).args[0]).to.equal("");
+      expect(onChangeCallback.getCall(2).args[1].action).to.eq("remove");
+    });
+
     it("should limit call to onChange (debounce)", done => {
       const period = 100;
       const onChangeCallback = sinon.spy();
@@ -475,7 +545,7 @@ describe("Ace Component", () => {
 
       expect(onChangeCallback.callCount).to.equal(0);
 
-      setTimeout(function() {
+      setTimeout(function () {
         expect(onChangeCallback.callCount).to.equal(1);
         expect(onChangeCallback.getCall(0).args[0]).to.equal(expectText2);
         expect(onChangeCallback.getCall(0).args[1].action).to.eq("insert");
@@ -483,7 +553,7 @@ describe("Ace Component", () => {
         wrapper.instance().editor.setValue(expectText2, 1);
         wrapper.instance().editor.setValue(expectText, 1);
         expect(onChangeCallback.callCount).to.equal(0);
-        setTimeout(function() {
+        setTimeout(function () {
           expect(onChangeCallback.callCount).to.equal(1);
           expect(onChangeCallback.getCall(0).args[0]).to.equal(expectText);
           expect(onChangeCallback.getCall(0).args[1].action).to.eq("insert");
@@ -546,7 +616,7 @@ describe("Ace Component", () => {
     });
 
     it("should call the onSelectionChange method callback", done => {
-      let onSelectionChange = function() {};
+      let onSelectionChange = function () {};
       const value = `
         function main(value) {
           console.log('hi james')
@@ -555,7 +625,7 @@ describe("Ace Component", () => {
       `;
       const wrapper = mount(<AceEditor value={value} />, mountOptions);
 
-      onSelectionChange = function(selection) {
+      onSelectionChange = function (selection) {
         const content = wrapper
           .instance()
           .editor.session.getTextRange(selection.getRange());
@@ -563,14 +633,11 @@ describe("Ace Component", () => {
         done();
       };
       wrapper.setProps({ onSelectionChange });
-      wrapper
-        .instance()
-        .editor.getSession()
-        .selection.selectAll();
+      wrapper.instance().editor.getSession().selection.selectAll();
     });
 
     it("should call the onCursorChange method callback", done => {
-      let onCursorChange = function() {};
+      let onCursorChange = function () {};
       const value = `
         function main(value) {
           console.log('hi james')
@@ -579,21 +646,15 @@ describe("Ace Component", () => {
       `;
 
       const wrapper = mount(<AceEditor value={value} />, mountOptions);
-      onCursorChange = function(selection) {
+      onCursorChange = function (selection) {
         expect(selection.getCursor()).to.deep.equal({ row: 0, column: 0 });
         done();
       };
       wrapper.setProps({ onCursorChange });
       expect(
-        wrapper
-          .instance()
-          .editor.getSession()
-          .selection.getCursor()
+        wrapper.instance().editor.getSession().selection.getCursor()
       ).to.deep.equal({ row: 5, column: 6 });
-      wrapper
-        .instance()
-        .editor.getSession()
-        .selection.moveCursorTo(0, 0);
+      wrapper.instance().editor.getSession().selection.moveCursorTo(0, 0);
     });
 
     it("should call the onBlur method callback", () => {
